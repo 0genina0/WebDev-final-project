@@ -1,0 +1,31 @@
+{
+  "name": "webdev-final-project",
+  "version": "1.0.0",
+  "description": "WebDev Advanced Final Project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/0genina0/WebDev-final-project.git"
+  },
+  "keywords": [
+    "WebDev",
+    "Advanced",
+    "Jönköping",
+    "Website",
+    "Venues",
+    "Stores"
+  ],
+  "author": "Ene, Daria, Nína, Sneki",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/0genina0/WebDev-final-project/issues"
+  },
+  "homepage": "https://github.com/0genina0/WebDev-final-project#readme",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
