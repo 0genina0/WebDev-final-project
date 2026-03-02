@@ -12,8 +12,25 @@ fetch('/api/stores')
             let newStore = document.createElement("li");
 
             newStore.textContent = store.name;
+
+            let newStoreLink = document.createElement("a");
+
+            newStoreLink.href = store.url;
+            newStoreLink.textContent = "Visit Website";
+
+            let newStoreDistrict = document.createElement("span");
+
+            newStoreDistrict.textContent = store.district;
+
             venueList.appendChild(newStore);
+
+            venueList.appendChild(newStoreDistrict);
+
+            venueList.appendChild(newStoreLink);
+         
+
         }); 
+    
     }) 
 
 
