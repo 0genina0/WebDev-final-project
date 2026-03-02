@@ -14,15 +14,6 @@ app.get('/api/stores', (req, res) =>{
 
 console.log("data loaded:", storeData);
 
-
-app.get("/", (req, res) => {
-    res.send("Haiiii");
-});
-
-
-// app.get('/api/stores')
-
-
 app.listen(PORT, ()=>{
     console.log(`Server running at http://localhost:${PORT}`);
 });
