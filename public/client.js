@@ -27,12 +27,7 @@ fetch('/api/stores')
             venueList.appendChild(newStoreDistrict);
 
             venueList.appendChild(newStoreLink);
-         
 
         }); 
     
     }) 
-
-
-
-
