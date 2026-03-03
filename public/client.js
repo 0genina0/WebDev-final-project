@@ -3,6 +3,7 @@ let body = document.querySelector("body");
 console.log("client script loaded!!");
 
 let loginPageButton = document.createElement("button");
+loginPageButton.textContent = "login";
 body.appendChild(loginPageButton);
 
 loginPageButton.addEventListener("click", ()=> {
