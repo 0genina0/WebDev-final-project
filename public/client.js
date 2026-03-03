@@ -1,7 +1,13 @@
 let loggedIn = false;
-
+let body = document.querySelector("body");
 console.log("client script loaded!!");
 
+let loginPageButton = document.createElement("button");
+body.appendChild(loginPageButton);
+
+loginPageButton.addEventListener("click", ()=> {
+    window.location.href = "/login";
+})
 
 fetch('/api/stores')
     .then(response => response.json())
@@ -54,7 +60,6 @@ loginForm.addEventListener("submit", async (e) =>{
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({ username, password})
     });
-    const data = await res.json();
 
     if (!res.ok){
         loggedIn = false;

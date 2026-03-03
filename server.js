@@ -35,6 +35,10 @@ app.get('/api/stores', (req, res) =>{
 
 console.log("data loaded:", storeData);
 
+
+
+
+
 //login form
  let isLoggedIn = false;
  app.post ("/login", (req, res) =>{
