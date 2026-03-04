@@ -13,13 +13,18 @@ loginPageButton.addEventListener("click", ()=> {
 })
 
 let isSorted = false;
+let listDrawn = false;
 
-function drawFullList() {
+function reDrawList() {
+  const venueList = document.getElementById("venueUl");
+  venueList.innerHTML = "";
+  listDrawn = false;
+}
+
+function drawFullList(data) {
+    listDrawn = true;
+    reDrawList();
     let venueList = document.getElementById('venueUl');
-
-    fetch('/api/stores')
-    .then(response => response.json())
-    .then(data => {
 
         data.forEach((store) => { 
 
@@ -41,19 +46,17 @@ function drawFullList() {
             venueList.appendChild(newStoreDistrict);
 
             venueList.appendChild(newStoreLink);
-        })})
-
-}
+        })}
 
 function drawSortedList() {
-    fetch('/api/stores')
-            .then(response => response.json())
-            .then(data => {
-                data.forEach((store) => {
-                    selectOption.addEventListener('change', ()=>{
-            
-                    let venueList = document.getElementById('venueUl');
-                    if (selectOption.value === store.district){
+    listDrawn = true;
+    reDrawList();
+  let venueList = document.getElementById('venueUl');
+    const selectedDistrict = selectOption.value;
+
+  const filtered = data.filter(store => store.district === selectedDistrict);
+
+                filtered.forEach((store) => {
                     let sortedStore = document.createElement("li");
         
                     sortedStore.textContent = store.name;
@@ -71,28 +74,24 @@ function drawSortedList() {
         
                     venueList.appendChild(sortedStoreDistrict);
         
-                    venueList.appendChild(sortedStoreLink);  }})
+                    venueList.appendChild(sortedStoreLink);  })}
     
             
-             
-
-})})}
+            
 
 
 fetch('/api/stores')
     .then(response => response.json())
     .then(data => {
-        console.log("Stores received from server:", data);
+    drawFullList(data);
         selectOption.addEventListener('change', ()=>{
-            isSorted = true;
         })
-        if (isSorted = true){
-            
-            drawSortedList();
-        } else if (isSorted = false){
-            drawFullList();
-        }
-    })
+        if (selectOption.value === "location"){
+        drawFullList(data);
+      } else {
+        drawSortedList(data);
+      }
+    });
     
 
 
