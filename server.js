@@ -33,7 +33,7 @@ app.get('/api/stores', (req, res) =>{
   res.json(storeData);
 });
 
-console.log("data loaded:", storeData);
+console.log("data loaded!");
 
 
 

@@ -1,6 +1,8 @@
 let loggedIn = false;
 let body = document.querySelector("body");
 console.log("client script loaded!!");
+let selectOption = document.getElementById("filter");
+
 
 let loginPageButton = document.createElement("button");
 loginPageButton.textContent = "login";
@@ -10,12 +12,14 @@ loginPageButton.addEventListener("click", ()=> {
     window.location.href = "/login";
 })
 
-fetch('/api/stores')
+let isSorted = false;
+
+function drawFullList() {
+    let venueList = document.getElementById('venueUl');
+
+    fetch('/api/stores')
     .then(response => response.json())
     .then(data => {
-        console.log("Stores received from server:", data);
-
-        let venueList = document.getElementById('venueUl');
 
         data.forEach((store) => { 
 
@@ -37,10 +41,59 @@ fetch('/api/stores')
             venueList.appendChild(newStoreDistrict);
 
             venueList.appendChild(newStoreLink);
+        })})
 
-        }); 
+}
+
+function drawSortedList() {
+    fetch('/api/stores')
+            .then(response => response.json())
+            .then(data => {
+                data.forEach((store) => {
+                    selectOption.addEventListener('change', ()=>{
+            
+                    let venueList = document.getElementById('venueUl');
+                    if (selectOption.value === store.district){
+                    let sortedStore = document.createElement("li");
+        
+                    sortedStore.textContent = store.name;
+        
+                    let sortedStoreLink = document.createElement("a");
+        
+                    sortedStoreLink.href = store.url;
+                    sortedStoreLink.textContent = "Visit Website";
+        
+                    let sortedStoreDistrict = document.createElement("span");
+        
+                    sortedStoreDistrict.textContent = store.district;
+        
+                    venueList.appendChild(sortedStore);
+        
+                    venueList.appendChild(sortedStoreDistrict);
+        
+                    venueList.appendChild(sortedStoreLink);  }})
     
-    }) 
+            
+             
+
+})})}
+
+
+fetch('/api/stores')
+    .then(response => response.json())
+    .then(data => {
+        console.log("Stores received from server:", data);
+        selectOption.addEventListener('change', ()=>{
+            isSorted = true;
+        })
+        if (isSorted = true){
+            
+            drawSortedList();
+        } else if (isSorted = false){
+            drawFullList();
+        }
+    })
+    
 
 
 
