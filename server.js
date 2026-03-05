@@ -1,33 +1,55 @@
 const express = require("express");
+//const session = require("express-session");
 const app = express();
 const PORT = 3000;
+const cookieParser = require("cookie-parser");
+const crypto = require("crypto");
+
+app.use(express.urlencoded({ extended: true}));
+app.use(express.json());
+app.use(cookieParser());
+
+app.use('/', express.static('public'));
+
+// app.use(session({
+//   secret: "supersecretkey",
+//   resave: false,
+//   saveUninitialized: false,
+// }));
 
 const admin = "admin";
 const adminPass = "12345";
 
-const storeData = require("./stores.json");
+let storeData = require("./stores.json");
 
-
-app.use('/', express.static('public'));
-app.use(express.json());
+// add ids if missing
+storeData = storeData.map((s, index) => ({
+  id: s.id ?? index + 1,
+  ...s,
+}))
 
 app.get('/login', (req, res) => { 
     res.send(`<!DOCTYPE html>
   <html>
     <body>
       <h1>Login</h1>
-      <form method="POST" action="/login" id="loginForm">
+      <form id="loginForm">
         <label for="username">Username:</label>
         <input type="text" name="username" id="username" required /><br/><br/>
         <label for="password">Password:</label>
         <input type="password" name="password" id="password" required /><br/><br/>
         <button type="submit" id="submit">Login</button>
       </form>
-      <hr>
-      <h1>Store List</h1>
-      <ul id="venueUl"></ul> <script src="/client.js"></script> </body>
+      
+    <script src="/client.js"></script>
+    </body>
   </html>`);
-  });
+});
+
+app.get("/api/status", (req, res) => {
+  const token = req.cookies.authToken;
+  res.json({ loggedIn: !!token && activeTokens.has(token) });
+});
 
 app.get('/api/stores', (req, res) =>{
   res.json(storeData);
@@ -35,30 +57,90 @@ app.get('/api/stores', (req, res) =>{
 
 console.log("data loaded!");
 
-
-
-
-
 //login form
- let isLoggedIn = false;
+ //let isLoggedIn = false;
+ let activeTokens = new Set(); //new SET inspect :D
  app.post ("/login", (req, res) =>{
-   const {username, password }= req.body;
+   const {username, password }= req.body || {};
 
-   if(username === admin && password === adminPass){
-     isLoggedIn = true;
-    return res.json({message: "sucessfully logged in"});
+   if (username === admin && password === adminPass) {
+    const token = crypto.randomBytes(24).toString("hex");
+    activeTokens.add(token);
+
+    res.cookie("authToken", token, {
+      httpOnly: true,
+      sameSite: "lax",
+      // secure: true, // only if using https
+    });
+
+    return res.redirect("/");
   }
-  res.status(401).json({message: "errooooor logging in"});
+
+  return res.status(401).send("Wrong login");
 });
 
-app.post("/api/logout", (req, res) =>
-{
-  isLoggedIn = false; 
+// Log out
+app.post("/api/logout", (req, res) => {
+  const token = req.cookies.authToken;
+  if (token) activeTokens.delete(token);
+  res.clearCookie("authToken");
+  res.json({ message: "Logged out" });
+});
 
-  res.json({message: "succesfully logged out"});
-} )
+//Function 
+function requireLogin(req, res, next) {
+  const token = req.cookies.authToken;
+  if (!token || !activeTokens.has(token)) {
+    return res.status(401).json({ message: "Not logged in" });
+  }
+  next();
+}
 
+// CREATING A STORE
+app.post("/api/stores", requireLogin, (req, res) => {
+  const { name, url, district } = req.body || {};
+  if (!name || !url || !district) {
+  return res.status(400).json({ message: "name, url, district are required" });
+}
+
+  const newStoreAdded = {
+    id: storeData.length + 1,
+    name,
+    url,
+    district,
+  };
+
+  storeData.push(newStoreAdded);
+  res.status(201).json(newStoreAdded);
+})
+
+// UPDATE STORE
+app.put("/api/stores/:id", requireLogin, (req, res) => {
+  const id = Number(req.params.id);
+  const store = storeData.find(s => Number(s.id) === id);
+
+  if (!store) return res.status(404).json();
+
+  const { name, url, district } = req.body || {};
+  if (name !== undefined) store.name = name;
+  if (url !== undefined) store.url = url;
+  if (district !== undefined) store.district = district;
+
+  res.json(store);
+}) 
+
+// DELETE STORE
+app.delete("/api/stores/:id", requireLogin, (req, res) => {
+  const id = Number(req.params.id);
+  const index = storeData.findIndex(s => Number(s.id) === id);
+
+  if (index === -1) return res.status(404).json();
+
+  const deleted = storeData.splice(index, 1)[0];
+  res.json({ message: "Deleted", deleted });
+});
+
+// PORT
 app.listen(PORT, ()=>{
     console.log(`Server running at http://localhost:${PORT}`);
 });
-
