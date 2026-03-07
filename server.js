@@ -4,6 +4,55 @@ const app = express();
 const PORT = 3000;
 const cookieParser = require("cookie-parser");
 const crypto = require("crypto");
+const { Client } = require('pg');
+
+
+const client = new Client({
+  host: 'localhost',
+  port: 5432,
+  user: 'postgres',
+  password: '12345',
+  database: 'postgres',
+});
+
+async function connectDB(){
+  try {
+    await client.connect();
+    console.log('Connected to PSQL database with async/wait');
+  } catch (err){
+    console.error('Connection error :(', err.stack);
+  }
+}
+
+let storeData = require("./stores.json");
+
+
+
+function insertRecord(insertValues){
+  const insertQuery = `
+  INSERT INTO venues (name, url, district)
+  VALUES ($1, $2, $3)
+  RETURNING *;`;
+  return client.query(insertQuery, insertValues)
+    .then(res=> console.log('Inserted Record:', res.rows[0]))
+    .catch(err=> console.error('Error inserting record', err.stack));
+}
+
+
+async function insertIntoTable() {
+  for (store of storeData){
+    const insertValues = [store.name, store.url, store.district];
+    await insertRecord(insertValues);
+  }
+}
+
+
+connectDB().then(()=> {
+  insertIntoTable();
+})
+
+
+
 
 app.use(express.urlencoded({ extended: true}));
 app.use(express.json());
@@ -20,7 +69,7 @@ app.use('/', express.static('public'));
 const admin = "admin";
 const adminPass = "12345";
 
-let storeData = require("./stores.json");
+
 
 // add ids if missing
 storeData = storeData.map((s, index) => ({
