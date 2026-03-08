@@ -12,7 +12,7 @@ const admin = "admin";
 const adminPass = "12345";
 
 const client = new Client({
-  host: 'localhost',
+  host: 'host.docker.internal',
   port: 5432,
   user: 'postgres',
   password: '12345',

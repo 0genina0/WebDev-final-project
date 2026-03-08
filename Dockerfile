@@ -1,11 +1,12 @@
-FROM node:20-alpine
+FROM node:24-alpine3.22
+WORKDIR /app
 
-WORKDIR /usr/src/app
+COPY package.json ./
+COPY package-lock.json ./
+
+RUN npm ci
 
 COPY . .
 
-RUN npm install
-
 EXPOSE 3000
-
 CMD ["node", "server.js"]
