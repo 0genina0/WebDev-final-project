@@ -28,6 +28,8 @@ function renderStores(data) {
           <span>${store.name}</span>
           <span>(${store.district ?? "Unknown"})</span>
           <a href="${store.url}">Visit Website</a>
+          <span>There are ${store.visitors} visitors.</span>
+          <span>The venue is: ${store.store_status}.</span>
       `;
 
       if (loggedIn) {
@@ -163,6 +165,12 @@ function createNewStores () {
             let addStoreUrl = document.createElement("input");
             addStoreUrl.placeholder = "Url";
 
+            let addStoreVisitors = document.createElement("input");
+            addStoreVisitors.placeholder = "Visitors";
+
+            let addStoreStatus = document.createElement("input");
+            addStoreStatus.placeholder = "Store Status";
+
             let addNewStoreEl = document.createElement("button");
             addNewStoreEl.type = "button";
             addNewStoreEl.textContent = "Add";
@@ -171,12 +179,16 @@ function createNewStores () {
             newStoreForm.appendChild(addStoreDistrict);
             newStoreForm.appendChild(addStoreUrl);
             newStoreForm.appendChild(addNewStoreEl);
+            newStoreForm.appendChild(addStoreVisitors);
+            newStoreForm.appendChild(addStoreStatus);
         
             addNewStoreEl.addEventListener("click", async () => {
             await createNewStore(
               addStoreName.value,
               addStoreUrl.value,
-              addStoreDistrict.value
+              addStoreDistrict.value,
+              addStoreVisitors.value,
+              addStoreStatus.value
             );
             loadStores();
           });
@@ -201,12 +213,12 @@ function createNewStores () {
 // }
 
 //CREATE NEW STORE
-async function createNewStore(name, url, district) {
+async function createNewStore(name, url, district, visitors, store_status) {
   const res = await fetch("/api/stores", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify({ name, url, district })
+    body: JSON.stringify({ name, url, district, visitors, store_status })
   });
 
   if (!res.ok) throw new Error("Store not added");
@@ -224,12 +236,14 @@ async function editStores(store) {
   const name = prompt("New name:", store.name);
   const url = prompt("New url:", store.url);
   const district = prompt("New district:", store.district);
+  const visitors = prompt("New visitors amount:", store.visitors);
+  const store_status = prompt("New store status:", store.store_status)
 
   const res = await fetch(`/api/stores/${store.id}`, {
     method: "PUT",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, url, district }),
+    body: JSON.stringify({ name, url, district, visitors, store_status }),
   });
 
   if (!res.ok) return alert("Edit failed");

@@ -30,8 +30,9 @@ let storeData = require('./stores.json');
 
 function insertRecord(insertValues){
   const insertQuery = `
-  INSERT INTO venues (name, url, district)
-  VALUES ($1, $2, $3)
+  INSERT INTO venues (name, url, district, visitors, store_status)
+  VALUES ($1, $2, $3, $4, $5)
+  ON CONFLICT (name) DO NOTHING
   RETURNING *;`;
   return client.query(insertQuery, insertValues)
     .then(res=> console.log('Inserted Record:', res.rows[0]))
@@ -40,8 +41,15 @@ function insertRecord(insertValues){
 
 
 async function insertIntoTable() {
+
+  const storeStatus = ["open", "closed", "under construction", "coming soon"];
+
+
   for (store of storeData){
-    const insertValues = [store.name, store.url, store.district];
+    const visitors = Math.floor(Math.random() * 201);
+    const randomStatus = storeStatus[Math.floor(Math.random() * storeStatus.length)];
+
+    const insertValues = [store.name, store.url, store.district, visitors, randomStatus];
     await insertRecord(insertValues);
   }
 }
@@ -170,20 +178,20 @@ app.delete("/api/stores/:id", requireLogin, async (req, res) => {
 
 // POST
 app.post("/api/stores", requireLogin, async (req, res) => {
-  const { name, url, district } = req.body;
+  const { name, url, district, visitors, store_status } = req.body;
   const result = await client.query(
-      'INSERT INTO venues (name, url, district) VALUES ($1, $2, $3) RETURNING *',
-      [name, url, district]
+      'INSERT INTO venues (name, url, district, visitors, store_status) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [name, url, district, visitors, store_status]
   );
   res.status(201).json(result.rows[0]);
 });
 
 // PUT
 app.put("/api/stores/:id", requireLogin, async (req, res) => {
-  const { name, url, district } = req.body;
+  const { name, url, district, visitors, store_status } = req.body;
   const result = await client.query(
-      'UPDATE venues SET name=$1, url=$2, district=$3 WHERE id=$4 RETURNING *',
-      [name, url, district, req.params.id]
+      'UPDATE venues SET name=$1, url=$2, district=$3, visitors=$4, store_status=$5 WHERE id=$6 RETURNING *',
+      [name, url, district, visitors, store_status, req.params.id]
   );
   res.json(result.rows[0]);
 });
