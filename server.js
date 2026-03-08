@@ -104,13 +104,20 @@ app.get("/api/status", (req, res) => {
   res.json({ loggedIn: !!token && activeTokens.has(token) });
 });
 
-app.get('/api/stores', async (req, res) =>{
+app.get('/api/stores', async (req, res) => {
+  const district = req.query.district; // This catches the ?district=...
+  
   try {
-    const result = await client.query('SELECT * FROM venues ORDER BY id ASC');
-    res.json(result.rows); 
+      let result;
+      if (district) {
+          // Database handles the filtering
+          result = await client.query('SELECT * FROM venues WHERE district = $1 ORDER BY id ASC', [district]);
+      } else {
+          result = await client.query('SELECT * FROM venues ORDER BY id ASC');
+      }
+      res.json(result.rows);
   } catch (err) {
-    console.error(err);
-    res.status(500).send("Database error");
+      res.status(500).send("DB Error");
   }
 });
 

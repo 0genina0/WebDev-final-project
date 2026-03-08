@@ -15,108 +15,136 @@ function reDrawList() {
   }
 }
 
-// Function to draw the full list
-function drawFullList(data) {
-    reDrawList();
-    let venueList = document.getElementById('venueUl');
+// ONE function to rule them all
+function renderStores(data) {
+  reDrawList();
+  const venueList = document.getElementById('venueUl');
 
-    data.forEach((store) => { 
-        let newStore = document.createElement("li");
+  data.forEach((store) => { 
+      const li = document.createElement("li");
+      
+      // Use the ID from the database for the delete/edit calls
+      li.innerHTML = `
+          <span>${store.name}</span>
+          <span>(${store.district ?? "Unknown"})</span>
+          <a href="${store.url}">Visit Website</a>
+      `;
 
-        let newStoreName = document.createElement("span");
-        newStoreName.textContent = store.name + "";
+      if (loggedIn) {
+          const deleteBtn = document.createElement("button");
+          deleteBtn.textContent = "Delete";
+          deleteBtn.onclick = () => deleteStore(store.id);
 
-        let newStoreLink = document.createElement("a");
-        newStoreLink.href = store.url;
-        newStoreLink.textContent = "Visit Website";
+          const editBtn = document.createElement("button");
+          editBtn.textContent = "Edit";
+          editBtn.onclick = () => editStores(store);
 
-        let newStoreDistrict = document.createElement("span");
-        newStoreDistrict.textContent = `(${store.district ?? "Unknown"})`;
+          li.appendChild(deleteBtn);
+          li.appendChild(editBtn);
+      }
+      venueList.appendChild(li);
+  });
+}
 
-        newStore.appendChild(newStoreName);
+function loadStores() {
+  const district = selectOption.value;
+  
+  // Using the template literal for the district
+  const url = (district === "All") ? "/api/stores" : `/api/stores?district=${district}`;
 
-        newStore.appendChild(newStoreDistrict);
+  fetch(url, { credentials: "include" })
+      .then(res => res.json())
+      .then(data => {
+          createNewStores();
+          renderStores(data); // Just draw whatever the server sent
+      });
+}
 
-        newStore.appendChild(newStoreLink);
+// // Function to draw the full list
+// function drawFullList(data) {
+//     reDrawList();
+//     let venueList = document.getElementById('venueUl');
 
-         // Buttons that show only when you are logged in
-        if (loggedIn) {
+//     data.forEach((store) => { 
+//         let newStore = document.createElement("li");
 
-            const deleteButton = document.createElement("button");
-            deleteButton.textContent = "Delete";
-            deleteButton.addEventListener("click", () => deleteStore(store.id));
-            newStore.appendChild(deleteButton);
+//         let newStoreName = document.createElement("span");
+//         newStoreName.textContent = store.name + "";
 
-            const editButton = document.createElement("button");
-            editButton.textContent = "Edit";
-            editButton.addEventListener("click", () => editStores(store));
-            newStore.appendChild(editButton);
-        }
+//         let newStoreLink = document.createElement("a");
+//         newStoreLink.href = store.url;
+//         newStoreLink.textContent = "Visit Website";
 
-        venueList.appendChild(newStore);
-})}
+//         let newStoreDistrict = document.createElement("span");
+//         newStoreDistrict.textContent = `(${store.district ?? "Unknown"})`;
 
-// FUnction to draw the sorted list by district
-function drawSortedList(data) {
-    reDrawList();
-    let venueList = document.getElementById('venueUl');
-    const selectedDistrict = selectOption.value;
+//         newStore.appendChild(newStoreName);
 
-    const filtered = data.filter(store => store.district === selectedDistrict);
+//         newStore.appendChild(newStoreDistrict);
 
-        filtered.forEach((store) => {
-          let newStore = document.createElement("li");
+//         newStore.appendChild(newStoreLink);
 
-        let newStoreName = document.createElement("span");
-        newStoreName.textContent = store.name + "";
+//          // Buttons that show only when you are logged in
+//         if (loggedIn) {
 
-        let newStoreLink = document.createElement("a");
-        newStoreLink.href = store.url;
-        newStoreLink.textContent = "Visit Website";
+//             const deleteButton = document.createElement("button");
+//             deleteButton.textContent = "Delete";
+//             deleteButton.addEventListener("click", () => deleteStore(store.id));
+//             newStore.appendChild(deleteButton);
 
-        let newStoreDistrict = document.createElement("span");
-        newStoreDistrict.textContent = `(${store.district})`;
+//             const editButton = document.createElement("button");
+//             editButton.textContent = "Edit";
+//             editButton.addEventListener("click", () => editStores(store));
+//             newStore.appendChild(editButton);
+//         }
 
-        newStore.appendChild(newStoreName);
+//         venueList.appendChild(newStore);
+// })}
 
-        newStore.appendChild(newStoreDistrict);
+// // FUnction to draw the sorted list by district
+// function drawSortedList(data) {
+//     reDrawList();
+//     let venueList = document.getElementById('venueUl');
+//     const selectedDistrict = selectOption.value;
 
-        newStore.appendChild(newStoreLink);
+//     const filtered = data.filter(store => store.district === selectedDistrict);
 
-         // Buttons that only show when logged in
-        if (loggedIn) {
-            const deleteButton = document.createElement("button");
-            deleteButton.textContent = "Delete";
-            deleteButton.addEventListener("click", () => deleteStore(store.id));
-            newStore.appendChild(deleteButton);
+//         filtered.forEach((store) => {
+//           let newStore = document.createElement("li");
 
-            const editButton = document.createElement("button");
-            editButton.textContent = "Edit";
-            editButton.addEventListener("click", () => editStores(store));
-            newStore.appendChild(editButton);
-        }
+//         let newStoreName = document.createElement("span");
+//         newStoreName.textContent = store.name + "";
 
-        venueList.appendChild(newStore);
-})}
+//         let newStoreLink = document.createElement("a");
+//         newStoreLink.href = store.url;
+//         newStoreLink.textContent = "Visit Website";
 
-// Check the status before redrawing the list
-// fetch("/api/status", { credentials: "include" })
-//   .then(r => r.json())
-//   .then(s => {
-//     loggedIn = s.loggedIn;
+//         let newStoreDistrict = document.createElement("span");
+//         newStoreDistrict.textContent = `(${store.district})`;
 
-//      if (loggedIn) {
-//         authButton.textContent = "Logout";
-//         authButton.addEventListener("click", logoutUser);
-//       } else {
-//         authButton.textContent = "Login";
-//         authButton.addEventListener("click", () => {
-//           window.location.href = "/login";
-//         });
-//       }
+//         newStore.appendChild(newStoreName);
 
-//     loadStores();
-//   });
+//         newStore.appendChild(newStoreDistrict);
+
+//         newStore.appendChild(newStoreLink);
+
+//          // Buttons that only show when logged in
+//         if (loggedIn) {
+//             const deleteButton = document.createElement("button");
+//             deleteButton.textContent = "Delete";
+//             deleteButton.addEventListener("click", () => deleteStore(store.id));
+//             newStore.appendChild(deleteButton);
+
+//             const editButton = document.createElement("button");
+//             editButton.textContent = "Edit";
+//             editButton.addEventListener("click", () => editStores(store));
+//             newStore.appendChild(editButton);
+//         }
+
+//         venueList.appendChild(newStore);
+// })}
+
+
 
 // Create element fucntion
 function createNewStores () {
@@ -156,19 +184,21 @@ function createNewStores () {
 }
 
 // Refreshes after CRUD
-function loadStores() {
-  fetch("/api/stores", { credentials: "include" })
-    .then(r => r.json())
-    .then(data => {
-        createNewStores();
+// function loadStores() {
+//   const district = selectOption.value
 
-       if (selectOption.value === "All") {
-            drawFullList(data);
-        } else {
-            drawSortedList(data);
-        }
-    });
-}
+//   fetch("/api/stores", { credentials: "include" })
+//     .then(r => r.json())
+//     .then(data => {
+//         createNewStores();
+
+//        if (selectOption.value === "All") {
+//             drawFullList(data);
+//         } else {
+//             drawSortedList(data);
+//         }
+//     });
+// }
 
 //CREATE NEW STORE
 async function createNewStore(name, url, district) {
