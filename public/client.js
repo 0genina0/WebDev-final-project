@@ -1,5 +1,3 @@
-//const { createElement } = require("react");
-
 let loggedIn = false;
 const body = document.querySelector("body");
 console.log("client script loaded!!");
@@ -7,7 +5,7 @@ let selectOption = document.getElementById("filter");
 
 let isSorted = false;
 
-// Function in order to clear the UlList
+// Function in order to clear the UlList before the table is displayed
 function reDrawList() {
   const venueList = document.getElementById("venueUl");
   if (venueList) {
@@ -15,7 +13,7 @@ function reDrawList() {
   }
 }
 
-// ONE function to rule them all
+// function to display the stores
 function renderStores(data) {
   reDrawList();
   const venueList = document.getElementById('venueUl');
@@ -23,7 +21,6 @@ function renderStores(data) {
   data.forEach((store) => { 
       const li = document.createElement("li");
       
-      // Use the ID from the database for the delete/edit calls
       li.innerHTML = `
           <span>${store.name}</span>
           <span>(${store.district ?? "Unknown"})</span>
@@ -48,107 +45,22 @@ function renderStores(data) {
   });
 }
 
+// redrawing the table after the CRUD
 function loadStores() {
   const district = selectOption.value;
-  
-  // Using the template literal for the district
+
+  // variable for sorting
   const url = (district === "All") ? "/api/stores" : `/api/stores?district=${district}`;
 
   fetch(url, { credentials: "include" })
       .then(res => res.json())
       .then(data => {
           createNewStores();
-          renderStores(data); // Just draw whatever the server sent
+          renderStores(data);
       });
 }
 
-// // Function to draw the full list
-// function drawFullList(data) {
-//     reDrawList();
-//     let venueList = document.getElementById('venueUl');
-
-//     data.forEach((store) => { 
-//         let newStore = document.createElement("li");
-
-//         let newStoreName = document.createElement("span");
-//         newStoreName.textContent = store.name + "";
-
-//         let newStoreLink = document.createElement("a");
-//         newStoreLink.href = store.url;
-//         newStoreLink.textContent = "Visit Website";
-
-//         let newStoreDistrict = document.createElement("span");
-//         newStoreDistrict.textContent = `(${store.district ?? "Unknown"})`;
-
-//         newStore.appendChild(newStoreName);
-
-//         newStore.appendChild(newStoreDistrict);
-
-//         newStore.appendChild(newStoreLink);
-
-//          // Buttons that show only when you are logged in
-//         if (loggedIn) {
-
-//             const deleteButton = document.createElement("button");
-//             deleteButton.textContent = "Delete";
-//             deleteButton.addEventListener("click", () => deleteStore(store.id));
-//             newStore.appendChild(deleteButton);
-
-//             const editButton = document.createElement("button");
-//             editButton.textContent = "Edit";
-//             editButton.addEventListener("click", () => editStores(store));
-//             newStore.appendChild(editButton);
-//         }
-
-//         venueList.appendChild(newStore);
-// })}
-
-// // FUnction to draw the sorted list by district
-// function drawSortedList(data) {
-//     reDrawList();
-//     let venueList = document.getElementById('venueUl');
-//     const selectedDistrict = selectOption.value;
-
-//     const filtered = data.filter(store => store.district === selectedDistrict);
-
-//         filtered.forEach((store) => {
-//           let newStore = document.createElement("li");
-
-//         let newStoreName = document.createElement("span");
-//         newStoreName.textContent = store.name + "";
-
-//         let newStoreLink = document.createElement("a");
-//         newStoreLink.href = store.url;
-//         newStoreLink.textContent = "Visit Website";
-
-//         let newStoreDistrict = document.createElement("span");
-//         newStoreDistrict.textContent = `(${store.district})`;
-
-//         newStore.appendChild(newStoreName);
-
-//         newStore.appendChild(newStoreDistrict);
-
-//         newStore.appendChild(newStoreLink);
-
-//          // Buttons that only show when logged in
-//         if (loggedIn) {
-//             const deleteButton = document.createElement("button");
-//             deleteButton.textContent = "Delete";
-//             deleteButton.addEventListener("click", () => deleteStore(store.id));
-//             newStore.appendChild(deleteButton);
-
-//             const editButton = document.createElement("button");
-//             editButton.textContent = "Edit";
-//             editButton.addEventListener("click", () => editStores(store));
-//             newStore.appendChild(editButton);
-//         }
-
-//         venueList.appendChild(newStore);
-// })}
-
-
-
-// Create element fucntion
+// The form for adding a new store
 function createNewStores () {
 
     if (loggedIn) {
@@ -178,10 +90,9 @@ function createNewStores () {
             newStoreForm.appendChild(addStoreName);
             newStoreForm.appendChild(addStoreDistrict);
             newStoreForm.appendChild(addStoreUrl);
-            newStoreForm.appendChild(addNewStoreEl);
             newStoreForm.appendChild(addStoreVisitors);
             newStoreForm.appendChild(addStoreStatus);
-        
+            newStoreForm.appendChild(addNewStoreEl);
             addNewStoreEl.addEventListener("click", async () => {
             await createNewStore(
               addStoreName.value,
@@ -195,24 +106,7 @@ function createNewStores () {
     }
 }
 
-// Refreshes after CRUD
-// function loadStores() {
-//   const district = selectOption.value
-
-//   fetch("/api/stores", { credentials: "include" })
-//     .then(r => r.json())
-//     .then(data => {
-//         createNewStores();
-
-//        if (selectOption.value === "All") {
-//             drawFullList(data);
-//         } else {
-//             drawSortedList(data);
-//         }
-//     });
-// }
-
-//CREATE NEW STORE
+//CREATE NEW STORE - updating the dataset
 async function createNewStore(name, url, district, visitors, store_status) {
   const res = await fetch("/api/stores", {
     method: "POST",
@@ -225,13 +119,14 @@ async function createNewStore(name, url, district, visitors, store_status) {
   return res.json();
 }
 
-// EDIT AND DELETE functions
+//DELETE function
 async function deleteStore(id) {
   const res = await fetch(`/api/stores/${id}`, { method: "DELETE", credentials: "include", });
   if (!res.ok) return alert("Delete failed (are you logged in?)");
   loadStores(); // redraw
 }
 
+// EDIT function
 async function editStores(store) {
   const name = prompt("New name:", store.name);
   const url = prompt("New url:", store.url);
@@ -259,14 +154,15 @@ async function logoutUser() {
 
   window.location.reload(); // refresh page
 }
-    
-// Fetching and displaying the list through a boolean from the JSON file  
-if (selectOption) {  
-    // Create the button for the LogIn
-  const logInButton = document.createElement("button");
-  body.appendChild(logInButton);
 
-  // Check login status
+// if slectOption is true then run this code
+if (selectOption) {  
+  //making the button to log in
+  const logInButton = document.createElement("button");
+  logInButton.className = "login-btn"; 
+  header.appendChild(logInButton);
+
+  // checking the log in status
   fetch("/api/status", { credentials: "include" })
     .then(res => res.json())
     .then(data => {
@@ -296,11 +192,14 @@ const submit = document.getElementById("submit");
 
 if (loginForm) {
     loginForm.addEventListener("submit", async (e) =>{
+        // This line of code was done with the help of this source: https://developer.mozilla.org/en-US/docs/Web/API/Event/preventDefault
+        // Was added to stop the default refreshing that happened after submition
         e.preventDefault();
 
         const username = document.getElementById("username").value;
         const password = document.getElementById("password").value;
 
+        // it await an answer from the backend wherther the username and pass are correct otherwise it will run immediately
         const res = await fetch("/login", {
             method: "POST",
             credentials: "include", 

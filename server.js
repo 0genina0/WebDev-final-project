@@ -1,11 +1,15 @@
 const express = require("express");
-//const session = require("express-session");
 const app = express();
 const PORT = 3000;
 const cookieParser = require("cookie-parser");
 const crypto = require("crypto");
 const { Client } = require('pg');
+const SECRET = 'mySecretCookieToken';
 
+const sessions = {};
+
+const admin = "admin";
+const adminPass = "12345";
 
 const client = new Client({
   host: 'localhost',
@@ -15,6 +19,7 @@ const client = new Client({
   database: 'postgres',
 });
 
+// Connecting the database to the server (?)
 async function connectDB(){
   try {
     await client.connect();
@@ -24,10 +29,10 @@ async function connectDB(){
   }
 }
 
+// Creating a variable to connect with the JSON file
 let storeData = require('./stores.json');
 
-
-
+//Insert values from JSON file into the PSQL table
 function insertRecord(insertValues){
   const insertQuery = `
   INSERT INTO venues (name, url, district, visitors, store_status)
@@ -39,11 +44,11 @@ function insertRecord(insertValues){
     .catch(err=> console.error('Error inserting record', err.stack));
 }
 
-
+// we made it async so it doesn't try to insert them all at once
 async function insertIntoTable() {
 
+  // extending the table w/ storeStatus and visitors
   const storeStatus = ["open", "closed", "under construction", "coming soon"];
-
 
   for (store of storeData){
     const visitors = Math.floor(Math.random() * 201);
@@ -54,66 +59,49 @@ async function insertIntoTable() {
   }
 }
 
-
-
+// Insert func is called after we connect to the database
 connectDB().then(()=> {
   insertIntoTable();
 })
 
-
-
-
-
-
-
 app.use(express.urlencoded({ extended: true}));
 app.use(express.json());
-app.use(cookieParser());
+app.use(cookieParser(SECRET));
 
 app.use('/', express.static('public'));
 
-// app.use(session({
-//   secret: "supersecretkey",
-//   resave: false,
-//   saveUninitialized: false,
-// }));
-
-const admin = "admin";
-const adminPass = "12345";
-
-
-
-// add ids if missing
-// storeData = storeData.map((s, index) => ({
-//   id: s.id ?? index + 1,
-//   ...s,
-// }))
-
+// Login form sent to HTML (Creating it dynamically)
 app.get('/login', (req, res) => { 
     res.send(`<!DOCTYPE html>
   <html>
+    <head>
+      <link rel="stylesheet" href="public.css">
+    </head>
     <body>
-      <h1>Login</h1>
-      <form id="loginForm">
-        <label for="username">Username:</label>
-        <input type="text" name="username" id="username" required /><br/><br/>
-        <label for="password">Password:</label>
-        <input type="password" name="password" id="password" required /><br/><br/>
-        <button type="submit" id="submit">Login</button>
-      </form>
-      
-    <script src="/client.js"></script>
+      <div class="login-container">
+        <h1>Login</h1>
+        <form id="loginForm">
+          <input type="text" name="username" id="username" placeholder="Username" required />
+          <input type="password" name="password" id="password" placeholder="Password" required />
+          <button type="submit" id="submit">Sign In</button>
+        </form>
+      </div>
+      <script src="/client.js"></script>
     </body>
   </html>`);
 });
 
+// Checking the admin status, whether it's logged in or not
 app.get("/api/status", (req, res) => {
-  const token = req.cookies.authToken;
-  res.json({ loggedIn: !!token && activeTokens.has(token) });
+  const token = req.signedCookies.authToken;
+  const isLoggedIn = !!(token && sessions[token]);
+
+  res.json({ loggedIn: isLoggedIn});
 });
 
+// API route for displaying the stores (?)
 app.get('/api/stores', async (req, res) => {
-  const district = req.query.district; // This catches the ?district=...
+  const district = req.query.district; // Fetches value from the dropdown
   
   try {
       let result;
@@ -132,19 +120,19 @@ app.get('/api/stores', async (req, res) => {
 console.log("data loaded!");
 
 //login form
- //let isLoggedIn = false;
- let activeTokens = new Set(); //new SET inspect :D
+//  let activeTokens = new Set(); //new SET inspect :D ?????
  app.post ("/login", (req, res) =>{
-   const {username, password }= req.body || {};
+   const {username, password }= req.body;
 
    if (username === admin && password === adminPass) {
-    const token = crypto.randomBytes(24).toString("hex");
-    activeTokens.add(token);
+    const token = crypto.randomBytes(64).toString("hex");
+    
+    sessions[token] = {username};
 
     res.cookie("authToken", token, {
+      signed: true,
       httpOnly: true,
       sameSite: "lax",
-      // secure: true, // only if using https
     });
 
     return res.redirect("/");
@@ -155,19 +143,24 @@ console.log("data loaded!");
 
 // Log out
 app.post("/api/logout", (req, res) => {
-  const token = req.cookies.authToken;
-  if (token) activeTokens.delete(token);
+  const token = req.signedCookies.authToken;
+  if (token) {
+    delete sessions[token];
+  }
   res.clearCookie("authToken");
-  res.json({ message: "Logged out" });
+  res.redirect('/');
 });
 
-//Function 
+//Function i dont know, but the EDIT, DELETE, ADD, cannot work without this
 function requireLogin(req, res, next) {
-  const token = req.cookies.authToken;
-  if (!token || !activeTokens.has(token)) {
-    return res.status(401).json({ message: "Not logged in" });
+  const token = req.signedCookies.authToken;
+
+  if (token && sessions[token]) {
+    req.user = sessions[token];
+    next();
+  } else {
+    res.status(401).json({ message: "Not logged in" });
   }
-  next();
 }
 
 // DELETE
@@ -176,7 +169,7 @@ app.delete("/api/stores/:id", requireLogin, async (req, res) => {
   res.json({ message: "Deleted" });
 });
 
-// POST
+// POST - Add new store
 app.post("/api/stores", requireLogin, async (req, res) => {
   const { name, url, district, visitors, store_status } = req.body;
   const result = await client.query(
@@ -186,7 +179,7 @@ app.post("/api/stores", requireLogin, async (req, res) => {
   res.status(201).json(result.rows[0]);
 });
 
-// PUT
+// PUT - Edit a store
 app.put("/api/stores/:id", requireLogin, async (req, res) => {
   const { name, url, district, visitors, store_status } = req.body;
   const result = await client.query(
@@ -195,50 +188,6 @@ app.put("/api/stores/:id", requireLogin, async (req, res) => {
   );
   res.json(result.rows[0]);
 });
-
-// // CREATING A STORE
-// app.post("/api/stores", requireLogin, (req, res) => {
-//   const { name, url, district } = req.body || {};
-//   if (!name || !url || !district) {
-//   return res.status(400).json({ message: "name, url, district are required" });
-// }
-
-//   const newStoreAdded = {
-//     id: storeData.length + 1,
-//     name,
-//     url,
-//     district,
-//   };
-
-//   storeData.push(newStoreAdded);
-//   res.status(201).json(newStoreAdded);
-// })
-
-// // UPDATE STORE
-// app.put("/api/stores/:id", requireLogin, (req, res) => {
-//   const id = Number(req.params.id);
-//   const store = storeData.find(s => Number(s.id) === id);
-
-//   if (!store) return res.status(404).json();
-
-//   const { name, url, district } = req.body || {};
-//   if (name !== undefined) store.name = name;
-//   if (url !== undefined) store.url = url;
-//   if (district !== undefined) store.district = district;
-
-//   res.json(store);
-// }) 
-
-// // DELETE STORE
-// app.delete("/api/stores/:id", requireLogin, (req, res) => {
-//   const id = Number(req.params.id);
-//   const index = storeData.findIndex(s => Number(s.id) === id);
-
-//   if (index === -1) return res.status(404).json();
-
-//   const deleted = storeData.splice(index, 1)[0];
-//   res.json({ message: "Deleted", deleted });
-// });
 
 // PORT
 app.listen(PORT, ()=>{

@@ -1,0 +1,94 @@
+/* Layout & Header */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f7f6;
+    color: #333;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* New Header positioning for Login/Logout */
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #ddd;
+}
+
+/* Dropdown (Select) Styling */
+#filter {
+    padding: 12px 20px;
+    font-size: 1rem;
+    border: 2px solid #3498db;
+    border-radius: 25px;
+    background-color: white;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.3s;
+}
+
+#filter:hover {
+    border-color: #2980b9;
+    box-shadow: 0 0 8px rgba(52, 152, 219, 0.3);
+}
+
+/* The Venue Cards */
+#venueUl {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+#venueUl li {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    border-left: 5px solid #3498db;
+}
+
+/* Button Styling (Consistent) */
+button {
+    padding: 10px 20px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    transition: opacity 0.2s;
+}
+
+.login-btn, .logout-btn {
+    background-color: #2c3e50;
+    color: white;
+}
+
+/* Login Form Styling */
+.login-container {
+    max-width: 400px;
+    margin: 100px auto;
+    background: white;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.login-container input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-sizing: border-box; /* Crucial for width */
+}
+
+.login-container button {
+    width: 100%;
+    background-color: #3498db;
+    margin-top: 10px;
+}
