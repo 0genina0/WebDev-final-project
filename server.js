@@ -162,49 +162,75 @@ function requireLogin(req, res, next) {
   next();
 }
 
-// CREATING A STORE
-app.post("/api/stores", requireLogin, (req, res) => {
-  const { name, url, district } = req.body || {};
-  if (!name || !url || !district) {
-  return res.status(400).json({ message: "name, url, district are required" });
-}
-
-  const newStoreAdded = {
-    id: storeData.length + 1,
-    name,
-    url,
-    district,
-  };
-
-  storeData.push(newStoreAdded);
-  res.status(201).json(newStoreAdded);
-})
-
-// UPDATE STORE
-app.put("/api/stores/:id", requireLogin, (req, res) => {
-  const id = Number(req.params.id);
-  const store = storeData.find(s => Number(s.id) === id);
-
-  if (!store) return res.status(404).json();
-
-  const { name, url, district } = req.body || {};
-  if (name !== undefined) store.name = name;
-  if (url !== undefined) store.url = url;
-  if (district !== undefined) store.district = district;
-
-  res.json(store);
-}) 
-
-// DELETE STORE
-app.delete("/api/stores/:id", requireLogin, (req, res) => {
-  const id = Number(req.params.id);
-  const index = storeData.findIndex(s => Number(s.id) === id);
-
-  if (index === -1) return res.status(404).json();
-
-  const deleted = storeData.splice(index, 1)[0];
-  res.json({ message: "Deleted", deleted });
+// DELETE
+app.delete("/api/stores/:id", requireLogin, async (req, res) => {
+  await client.query('DELETE FROM venues WHERE id = $1', [req.params.id]);
+  res.json({ message: "Deleted" });
 });
+
+// POST
+app.post("/api/stores", requireLogin, async (req, res) => {
+  const { name, url, district } = req.body;
+  const result = await client.query(
+      'INSERT INTO venues (name, url, district) VALUES ($1, $2, $3) RETURNING *',
+      [name, url, district]
+  );
+  res.status(201).json(result.rows[0]);
+});
+
+// PUT
+app.put("/api/stores/:id", requireLogin, async (req, res) => {
+  const { name, url, district } = req.body;
+  const result = await client.query(
+      'UPDATE venues SET name=$1, url=$2, district=$3 WHERE id=$4 RETURNING *',
+      [name, url, district, req.params.id]
+  );
+  res.json(result.rows[0]);
+});
+
+// // CREATING A STORE
+// app.post("/api/stores", requireLogin, (req, res) => {
+//   const { name, url, district } = req.body || {};
+//   if (!name || !url || !district) {
+//   return res.status(400).json({ message: "name, url, district are required" });
+// }
+
+//   const newStoreAdded = {
+//     id: storeData.length + 1,
+//     name,
+//     url,
+//     district,
+//   };
+
+//   storeData.push(newStoreAdded);
+//   res.status(201).json(newStoreAdded);
+// })
+
+// // UPDATE STORE
+// app.put("/api/stores/:id", requireLogin, (req, res) => {
+//   const id = Number(req.params.id);
+//   const store = storeData.find(s => Number(s.id) === id);
+
+//   if (!store) return res.status(404).json();
+
+//   const { name, url, district } = req.body || {};
+//   if (name !== undefined) store.name = name;
+//   if (url !== undefined) store.url = url;
+//   if (district !== undefined) store.district = district;
+
+//   res.json(store);
+// }) 
+
+// // DELETE STORE
+// app.delete("/api/stores/:id", requireLogin, (req, res) => {
+//   const id = Number(req.params.id);
+//   const index = storeData.findIndex(s => Number(s.id) === id);
+
+//   if (index === -1) return res.status(404).json();
+
+//   const deleted = storeData.splice(index, 1)[0];
+//   res.json({ message: "Deleted", deleted });
+// });
 
 // PORT
 app.listen(PORT, ()=>{
