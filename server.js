@@ -24,7 +24,7 @@ async function connectDB(){
   }
 }
 
-let storeData = require("./stores.json");
+let storeData = require('./stores.json');
 
 
 
@@ -47,9 +47,13 @@ async function insertIntoTable() {
 }
 
 
+
 connectDB().then(()=> {
   insertIntoTable();
 })
+
+
+
 
 
 
@@ -72,10 +76,10 @@ const adminPass = "12345";
 
 
 // add ids if missing
-storeData = storeData.map((s, index) => ({
-  id: s.id ?? index + 1,
-  ...s,
-}))
+// storeData = storeData.map((s, index) => ({
+//   id: s.id ?? index + 1,
+//   ...s,
+// }))
 
 app.get('/login', (req, res) => { 
     res.send(`<!DOCTYPE html>
@@ -100,8 +104,14 @@ app.get("/api/status", (req, res) => {
   res.json({ loggedIn: !!token && activeTokens.has(token) });
 });
 
-app.get('/api/stores', (req, res) =>{
-  res.json(storeData);
+app.get('/api/stores', async (req, res) =>{
+  try {
+    const result = await client.query('SELECT * FROM venues ORDER BY id ASC');
+    res.json(result.rows); 
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Database error");
+  }
 });
 
 console.log("data loaded!");
