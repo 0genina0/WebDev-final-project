@@ -3,8 +3,6 @@ const body = document.querySelector("body");
 console.log("client script loaded!!");
 let selectOption = document.getElementById("filter");
 
-let isSorted = false;
-
 // Function in order to clear the UlList before the table is displayed
 function reDrawList() {
   const venueList = document.getElementById("venueUl");
@@ -49,7 +47,7 @@ function renderStores(data) {
 function loadStores() {
   const district = selectOption.value;
 
-  // variable for sorting
+  // variable for sorting route
   const url = (district === "All") ? "/api/stores" : `/api/stores?district=${district}`;
 
   fetch(url, { credentials: "include" })
@@ -65,6 +63,7 @@ function createNewStores () {
 
     if (loggedIn) {
        let newStoreForm = document.getElementById("newstoreform");
+       //preventing crash when going to login page
        if (!newStoreForm) return;
        newStoreForm.innerHTML = '';
 
@@ -132,7 +131,7 @@ async function editStores(store) {
   const url = prompt("New url:", store.url);
   const district = prompt("New district:", store.district);
   const visitors = prompt("New visitors amount:", store.visitors);
-  const store_status = prompt("New store status:", store.store_status)
+  const store_status = prompt("New store status:", store.store_status);
 
   const res = await fetch(`/api/stores/${store.id}`, {
     method: "PUT",
@@ -199,7 +198,7 @@ if (loginForm) {
         const username = document.getElementById("username").value;
         const password = document.getElementById("password").value;
 
-        // it await an answer from the backend wherther the username and pass are correct otherwise it will run immediately
+        // it await an answer from the backend whether the username and pass are correct otherwise it will run immediately
         const res = await fetch("/login", {
             method: "POST",
             credentials: "include", 

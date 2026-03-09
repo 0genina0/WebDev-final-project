@@ -1,17 +1,18 @@
 const express = require("express");
 const app = express();
 const PORT = 3000;
+
 const cookieParser = require("cookie-parser");
 const crypto = require("crypto");
 const { Client } = require('pg');
 const SECRET = 'mySecretCookieToken';
-
 const sessions = {};
 
 const admin = "admin";
 const adminPass = "12345";
 
 const client = new Client({
+  //Don't look in same container, look for port on host comp
   host: 'host.docker.internal',
   port: 5432,
   user: 'postgres',
@@ -19,7 +20,7 @@ const client = new Client({
   database: 'postgres',
 });
 
-// Connecting the database to the server (?)
+// Connecting the database to the server 
 async function connectDB(){
   try {
     await client.connect();
@@ -120,7 +121,6 @@ app.get('/api/stores', async (req, res) => {
 console.log("data loaded!");
 
 //login form
-//  let activeTokens = new Set(); //new SET inspect :D ?????
  app.post ("/login", (req, res) =>{
    const {username, password }= req.body;
 
@@ -151,7 +151,7 @@ app.post("/api/logout", (req, res) => {
   res.redirect('/');
 });
 
-//Function i dont know, but the EDIT, DELETE, ADD, cannot work without this
+// user is logged in for CRUD no cheating
 function requireLogin(req, res, next) {
   const token = req.signedCookies.authToken;
 
